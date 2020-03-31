@@ -4,7 +4,7 @@
     "password": "{{ env `PROXMOXPASS`}}",
     "initrd": "/install/initrd.gz",
     "linux" : "testpacker",
-    "generated" : "{{ env `TODAY` }}"
+    "generated" : "{{ env `today` }}"
   },
   "provisioners": [
 	
