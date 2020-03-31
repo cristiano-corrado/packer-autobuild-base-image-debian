@@ -3,7 +3,8 @@
     "username": "root@pam",
     "password": "{{ env `PROXMOXPASS`}}",
     "initrd": "/install/initrd.gz",
-    "linux" : "testpacker"
+    "linux" : "testpacker",
+    "generated" : "{{ env `TODAY` }}"
   },
   "provisioners": [
 	
@@ -86,12 +87,12 @@
         "<enter>"  
       ],
       "ssh_username":"urandom",
-      "ssh_password":"darktux...",
+      "ssh_password":"{{user `password`}}",
       "ssh_port":22,
       "ssh_timeout":"30000s",
       "unmount_iso": true,
       "template_name": "debian-10-gold-test",
-      "template_description": "Debian 10, generated on {{ isotime \"2020-03-10T15:04:05Z\" }}"
+      "template_description": "Debian 10, generated on {{ user `generated` }}"
     }
   
  ]
