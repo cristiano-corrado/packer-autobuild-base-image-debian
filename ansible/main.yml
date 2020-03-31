@@ -1,0 +1,110 @@
+---
+- hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Install some helpful utilities.
+      apt:
+        name:
+          - git
+          - wget
+          - curl
+          - vim
+          - console-data
+          - zsh
+          - fzf
+          - apt-transport-https
+          - htop
+        state: present
+    - name: add hostname hub to hosts
+      shell: echo 10.8.0.1 hub >> /etc/hosts
+
+    - name: Add the user 'urandom' with a bash shell, appending the group 'admins' and 'developers' to the user's groups
+      user:
+        name: urandom
+        shell: /bin/zsh
+        uid: 1000
+        groups: sudo,users,video
+
+    - name: urandom - Set authorized key for test_user took from file
+      authorized_key:
+        user: urandom
+        state: present
+        key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDPVZifjEm1D5JbWaK1QSipoMFcAejmh9FYsxya4u72S2ATEXXP0fy0HAT6sX/7rtMqIh16AYx7XVTjtLjo51LEud+61OcHtj813msVbGrDebtbMKoHFmD2FA5KYej5sacYYAZkf7tXfCSC+jF5cdsNM+VJfMNm44W94dy9sV5X1eWIxQcl9gqLxzYDKksJV/8Z7DfaiqJiy8ThbHodo9ozCz5SDAgNLosyrgaE+/Nqd+nfxrNoY5MLtD85qDOC3Ht0+h/Oef6Lp/pv96MicE2KBMP/bBuq3n/65m6xJ9obVRV/Bi5CMlZ0dZF31rIA5ElUJap8kxuqWyHZF1lthrwV urandom@urandom"
+
+    - name: Download zsh installer
+      get_url:
+        url: https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh
+        dest: /home/urandom/install.sh
+        mode: '0777'
+
+    - name: Change the working directory to somedir/ before executing the command.
+      become: yes
+      become_user: urandom
+      shell: /home/urandom/install.sh
+      args:
+        chdir: /home/urandom/
+
+    - name: Replace normal them in zsh
+      become: yes
+      become_user: urandom
+      shell : >
+        sed -i 's/ZSH_THEME.*/ZSH_THEME=\"steeef\"/g' ~/.zshrc
+      args:
+        chdir: /home/urandom/
+
+    - name: Add fzf to .zshrc
+      become: yes
+      become_user: urandom
+      shell : >
+        echo '[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh' >> ~/.zshrc
+      args:
+        chdir: /home/urandom
+
+    - name: Download and install the Public Signing Key for elastic.co
+      apt_key:
+          url: https://artifacts.elastic.co/GPG-KEY-elasticsearch 
+          state: present
+            
+    - name: Add elastic to apt sources.list
+      apt_repository: 
+        repo: deb https://artifacts.elastic.co/packages/7.x/apt stable main
+        state: present
+        filename: elasticrepo
+
+    - name: Install filebeat and auditbeat
+      apt:
+          pkg:
+              - filebeat
+              - auditbeat
+
+    - name: Copy premade filebeat conf
+      copy:
+          src : /tmp/filebeat.yml
+          dest : /etc/filebeat/
+          owner: root
+          group: root
+
+    - name: Copy premade auditbeat conf
+      copy:
+          src: /tmp/auditbeat.yml
+          dest: /etc/auditbeat
+          owner: root
+          group: root
+    
+    - name: Restart auditbeat
+      systemd:
+          state: started
+          name: auditbeat
+          enabled: yes
+
+    - name: Restart filebeat
+      systemd:
+          state: started
+          name: filebeat
+          enabled: yes
+
+    - name: Update all packages to the latest version
+      apt:
+      upgrade: dist
