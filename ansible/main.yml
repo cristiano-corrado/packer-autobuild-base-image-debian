@@ -7,6 +7,7 @@
     - name: Install some helpful utilities.
       apt:
         name:
+          - openjdk-11-jdk
           - git
           - wget
           - curl
