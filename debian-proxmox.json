@@ -56,7 +56,7 @@
       "disks": [
         {
           "type": "scsi",
-          "disk_size": "50G",
+          "disk_size": "20G",
           "storage_pool": "local-lvm",
           "storage_pool_type": "lvm"
         }
